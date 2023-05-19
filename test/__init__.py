@@ -12,7 +12,7 @@
 
 from collections.abc import Iterable
 
-from pyproject_qiskit import __version__
+from pr_toolbox import __version__
 
 
 def test_version():

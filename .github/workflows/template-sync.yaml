@@ -17,7 +17,7 @@ jobs:
         uses: AndreasAugustin/actions-template-sync@v0.7.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_repo_path: pedrorrivero/pyproject-qiskit
+          source_repo_path: pedrorrivero/pr-toolbox
           upstream_branch: main
           pr_title: "chore(template): merge template changes"
           pr_labels: template

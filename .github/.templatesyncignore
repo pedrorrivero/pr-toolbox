@@ -1,6 +1,6 @@
 # SOURCE
 docs/
-pyproject_qiskit/
+pr_toolbox/
 test/
 # PACKAGE
 .cz.toml

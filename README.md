@@ -5,20 +5,20 @@
   [![Python](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-informational)](https://www.python.org/)
   [![Qiskit Terra](https://img.shields.io/badge/Qiskit%20Terra-%E2%89%A5%200.22.2-6133BD)](https://github.com/Qiskit/qiskit-terra)
 <br />
-  [![Tests](https://github.com/pedrorrivero/pyproject-qiskit/actions/workflows/test.yml/badge.svg)](https://github.com/pedrorrivero/pyproject-qiskit/actions/workflows/test.yml)
-  [![Coverage](https://coveralls.io/repos/github/pedrorrivero/pyproject-qiskit/badge.svg?branch=main)](https://coveralls.io/github/pedrorrivero/pyproject-qiskit?branch=main)
-  [![Release](https://img.shields.io/github/release/pedrorrivero/pyproject-qiskit.svg?include_prereleases&label=Release)](https://github.com/pedrorrivero/pyproject-qiskit/releases)
+  [![Tests](https://github.com/pedrorrivero/pr-toolbox/actions/workflows/test.yml/badge.svg)](https://github.com/pedrorrivero/pr-toolbox/actions/workflows/test.yml)
+  [![Coverage](https://coveralls.io/repos/github/pedrorrivero/pr-toolbox/badge.svg?branch=main)](https://coveralls.io/github/pedrorrivero/pr-toolbox?branch=main)
+  [![Release](https://img.shields.io/github/release/pedrorrivero/pr-toolbox.svg?include_prereleases&label=Release)](https://github.com/pedrorrivero/pr-toolbox/releases)
   [![DOI](https://img.shields.io/badge/DOI-zz.nnnn/zenodo.ddddddd-informational)](https://zenodo.org/)
-  [![License](https://img.shields.io/github/license/pedrorrivero/pyproject-qiskit?label=License)](LICENSE.txt)
+  [![License](https://img.shields.io/github/license/pedrorrivero/pr-toolbox?label=License)](LICENSE.txt)
 
 </div>
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
   <a href="README.md">
-    <img src="https://github.com/pedrorrivero/pyproject-qiskit/blob/main/docs/media/cover.png?raw=true" alt="Logo" width="300">
+    <img src="https://github.com/pedrorrivero/pr-toolbox/blob/main/docs/media/cover.png?raw=true" alt="Logo" width="300">
   </a>
-  <h2 align="center">Pyproject Qiskit</h2>
+  <h2 align="center">PR Toolbox</h2>
 </p>
 <!-- QUICK LINKS -->
 <!-- <p align="center">
@@ -44,21 +44,21 @@
 7. [License](#license)
 
 #### For users
-1. [Installation](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/INSTALL.md)
-2. [Tutorials](https://github.com/pedrorrivero/pyproject-qiskit/tree/main/docs/tutorials/)
-3. [Reference Guide](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/docs/reference_guide.md)
-4. [How-tos](https://github.com/pedrorrivero/pyproject-qiskit/tree/main/docs/how_tos/)
-5. [Explanations](https://github.com/pedrorrivero/pyproject-qiskit/tree/main/docs/explanations/)
-6. [How to Give Feedback](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/CONTRIBUTING.md#giving-feedback)
+1. [Installation](https://github.com/pedrorrivero/pr-toolbox/blob/main/INSTALL.md)
+2. [Tutorials](https://github.com/pedrorrivero/pr-toolbox/tree/main/docs/tutorials/)
+3. [Reference Guide](https://github.com/pedrorrivero/pr-toolbox/blob/main/docs/reference_guide.md)
+4. [How-tos](https://github.com/pedrorrivero/pr-toolbox/tree/main/docs/how_tos/)
+5. [Explanations](https://github.com/pedrorrivero/pr-toolbox/tree/main/docs/explanations/)
+6. [How to Give Feedback](https://github.com/pedrorrivero/pr-toolbox/blob/main/CONTRIBUTING.md#giving-feedback)
 
 #### For developers
-1. [Contribution Guidelines](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/CONTRIBUTING.md)
+1. [Contribution Guidelines](https://github.com/pedrorrivero/pr-toolbox/blob/main/CONTRIBUTING.md)
 
 
 ----------------------------------------------------------------------
 
 ### About This Project
-This template repository is a tool for creating Qiskit-based Python projects quickly by providing much of the necessary boilerplate code. The code examples in this template repository are written in accordance with pylint style checks, and the sample `pyproject_qiskit` module has an associated unit test module. We have also included examples of coverage testing, notebook tests, and notebook lint checks and wrapped all of these using [tox](https://github.com/tox-dev/tox) automated testing software. Check out the [file glossary](https://github.com/qiskit-community/quantum-prototype-template/blob/main/docs/file-map-and-description.md) for more information on each tool used in this repository.
+This template repository is a tool for creating Qiskit-based Python projects quickly by providing much of the necessary boilerplate code. The code examples in this template repository are written in accordance with pylint style checks, and the sample `pr_toolbox` module has an associated unit test module. We have also included examples of coverage testing, notebook tests, and notebook lint checks and wrapped all of these using [tox](https://github.com/tox-dev/tox) automated testing software. Check out the [file glossary](https://github.com/qiskit-community/quantum-prototype-template/blob/main/docs/file-map-and-description.md) for more information on each tool used in this repository.
 
 We encourage you to use this template repository to begin your own research projects!
 
@@ -75,7 +75,7 @@ Check out our [landing page](https://qiskit-community.github.io/prototypes/) and
 
 ### Deprecation Policy
 
-Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`CHANGELOG.md`](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/CHANGELOG.md).
+Prototypes are meant to evolve rapidly and, as such, do not follow [Qiskit's deprecation policy](https://qiskit.org/documentation/contributing_to_qiskit.html#deprecation-policy). We may occasionally make breaking changes in order to improve the user experience. When possible, we will keep old interfaces and mark them as deprecated, as long as they can co-exist with the new ones. Each substantial improvement, breaking change, or deprecation will be documented in [`CHANGELOG.md`](https://github.com/pedrorrivero/pr-toolbox/blob/main/CHANGELOG.md).
 
 
 ----------------------------------------------------------------------
@@ -101,4 +101,4 @@ Importantly, *[Qiskit IBM Runtime](https://qiskit.org/documentation/partners/qis
 ----------------------------------------------------------------------
 
 ### License
-[Apache License 2.0](https://github.com/pedrorrivero/pyproject-qiskit/blob/main/LICENSE.txt)
+[Apache License 2.0](https://github.com/pedrorrivero/pr-toolbox/blob/main/LICENSE.txt)
