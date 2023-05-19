@@ -8,7 +8,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit-based Python project."""
+"""Python toolbox by Pedro Rivero."""
 
 __copyright__ = "(C) Copyright 2023 Pedro Rivero"
 __version__ = "0.0.0"
