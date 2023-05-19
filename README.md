@@ -18,7 +18,7 @@
   <a href="README.md">
     <img src="https://github.com/pedrorrivero/pr-toolbox/blob/main/docs/media/cover.png?raw=true" alt="Logo" width="300">
   </a>
-  <h2 align="center">PR Toolbox</h2>
+  <h2 align="center">PR-Toolbox</h2>
 </p>
 <!-- QUICK LINKS -->
 <!-- <p align="center">
@@ -58,9 +58,24 @@
 ----------------------------------------------------------------------
 
 ### About This Project
-This template repository is a tool for creating Qiskit-based Python projects quickly by providing much of the necessary boilerplate code. The code examples in this template repository are written in accordance with pylint style checks, and the sample `pr_toolbox` module has an associated unit test module. We have also included examples of coverage testing, notebook tests, and notebook lint checks and wrapped all of these using [tox](https://github.com/tox-dev/tox) automated testing software. Check out the [file glossary](https://github.com/qiskit-community/quantum-prototype-template/blob/main/docs/file-map-and-description.md) for more information on each tool used in this repository.
+This toolbox has been put together throughout years of research and software development experience in the field of Quantum Information Science and Computing. While we do not expected it to be comprehensive —building on top of other quantum computing frameworks instead, mostly [Qiskit](https://qiskit.org/)— the author hopes to serve at least a number of purposes:
+1. Help bridge two equally important domains in the Quantum industry: _research_ and _development_ (sometimes at odds with each other).
+2. Serve as a playground to explore an develop new concepts and ideas.
+3. Communicate with users, listen to their needs, and propose solutions.
+<!-- MAYBE IN THE FUTURE: 4. Enable better quality education by introducing convenient abstractions to core concepts; pushing towards the maturity of the field/industry, and consolidation of _quantum engineering_ as a standalone discipline.
+5. Provide a conceptual framework to foster collaborations and facilitate the advancement of current capabilities. -->
 
-We encourage you to use this template repository to begin your own research projects!
+To these ends, the toolbox exposes libraries and frameworks with versatile and efficient functionality for many different tasks, including but not limited to:
+- Classical computing:
+  - Class design artifacts
+  - Design-pattern implementation utilities
+  - Serialization capabilities
+  - Validation tools
+- Quantum computing:
+  - Circuit construction and analysis
+  - Operator parsing
+  - Result computation
+
 
 ----------------------------------------------------------------------
 
