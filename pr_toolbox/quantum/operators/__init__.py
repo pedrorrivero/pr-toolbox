@@ -11,12 +11,11 @@
 """Quantum operators tools."""
 
 from .decomposition import AbelianDecomposer, NaiveDecomposer, OperatorDecomposer
-from .paulis import build_pauli_measurement, pauli_integer_mask
+from .paulis import pauli_integer_mask
 
 __all__ = [
     "AbelianDecomposer",
     "NaiveDecomposer",
     "OperatorDecomposer",
-    "build_pauli_measurement",
     "pauli_integer_mask",
 ]

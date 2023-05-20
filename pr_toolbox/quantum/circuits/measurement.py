@@ -12,7 +12,32 @@
 
 from __future__ import annotations
 
+from numpy import arange
 from qiskit.circuit import Measure, QuantumCircuit, Qubit
+from qiskit.quantum_info.operators import Pauli
+
+
+# TODO: `QuantumCircuit.measure_pauli(pauli)` (i.e. Qiskit-Terra)
+def build_pauli_measurement(pauli: Pauli) -> QuantumCircuit:
+    """Build measurement circuit for a given Pauli operator.
+
+    Note: if Pauli is I for all qubits, this function generates a circuit to
+    measure only the first qubit. Regardless of whether the result of that only
+    measurement is zero or one, the associated expectation value will always
+    evaluate to plus one. Therefore, such measurment can be interpreted as a
+    constant (1) and does not need to be performed. We leave this behavior as
+    default nonetheless.
+    """
+    measured_qubit_indices = arange(pauli.num_qubits)[pauli.z | pauli.x]
+    measured_qubit_indices = set(measured_qubit_indices.tolist()) or {0}
+    circuit = QuantumCircuit(pauli.num_qubits, len(measured_qubit_indices))
+    for cbit, qubit in enumerate(measured_qubit_indices):
+        if pauli.x[qubit]:
+            if pauli.z[qubit]:
+                circuit.sdg(qubit)
+            circuit.h(qubit)
+        circuit.measure(qubit, cbit)
+    return circuit
 
 
 def get_measured_qubits(circuit: QuantumCircuit) -> set[Qubit]:

@@ -15,38 +15,8 @@ from __future__ import annotations
 from functools import reduce
 from typing import Any
 
-from numpy import arange, bool_, dtype, ndarray, packbits
-from qiskit.circuit import QuantumCircuit
+from numpy import bool_, dtype, ndarray, packbits
 from qiskit.quantum_info.operators import Pauli
-
-
-################################################################################
-## UTILS
-################################################################################
-# TODO: `QuantumCircuit.measure_pauli(pauli)` (i.e. Qiskit-Terra)
-# TODO: skip Pauli I measurements as they always evaluate to one
-# TODO: insert pre-transpiled gates to avoid re-transpilation
-# TODO: cache
-def build_pauli_measurement(pauli: Pauli) -> QuantumCircuit:
-    """Build measurement circuit for a given Pauli operator.
-
-    Note: if Pauli is I for all qubits, this function generates a circuit to
-    measure only the first qubit. Regardless of whether the result of that only
-    measurement is zero or one, the associated expectation value will always
-    evaluate to plus one. Therefore, such measurment can be interpreted as a
-    constant (1) and does not need to be performed. We leave this behavior as
-    default nonetheless.
-    """
-    measured_qubit_indices = arange(pauli.num_qubits)[pauli.z | pauli.x]
-    measured_qubit_indices = set(measured_qubit_indices.tolist()) or {0}
-    circuit = QuantumCircuit(pauli.num_qubits, len(measured_qubit_indices))
-    for cbit, qubit in enumerate(measured_qubit_indices):
-        if pauli.x[qubit]:
-            if pauli.z[qubit]:
-                circuit.sdg(qubit)
-            circuit.h(qubit)
-        circuit.measure(qubit, cbit)
-    return circuit
 
 
 # TODO: endianess arg
