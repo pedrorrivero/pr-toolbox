@@ -53,3 +53,9 @@ class TestPauliIntegerMask:
     def test_pauli_integer_mask(self, pauli, expected):
         """Test Pauli integer mask base functionality."""
         assert pauli_integer_mask(pauli) == expected
+
+    @mark.parametrize("pauli", ["XZIZIYIXIIXI"])
+    def test_input_types(self, pauli):
+        """Test alternative Pauli input types."""
+        std_pauli = Pauli(pauli)
+        assert pauli_integer_mask(pauli) == pauli_integer_mask(std_pauli)

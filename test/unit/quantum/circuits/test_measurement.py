@@ -8,7 +8,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for quantum circuits tools."""
+"""Tests for circuit measurement tools."""
 
 from __future__ import annotations
 
@@ -165,6 +165,12 @@ class TestBuilPauliMeasurement:
     def test_build_pauli_measurement(self, pauli, expected):
         """Test build Pauli measurement circuits base functionality."""
         assert build_pauli_measurement(pauli) == expected
+
+    @mark.parametrize("pauli", ["IXYIZ"])
+    def test_input_types(self, pauli):
+        """Test alternative Pauli input types."""
+        std_pauli = Pauli(pauli)
+        assert build_pauli_measurement(pauli) == build_pauli_measurement(std_pauli)
 
 
 class TestGetMeasuredQubits:

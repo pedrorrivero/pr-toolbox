@@ -20,12 +20,13 @@ from qiskit.quantum_info.operators import Pauli
 
 
 # TODO: endianess arg
-def pauli_integer_mask(pauli: Pauli) -> int:
+def pauli_integer_mask(pauli: Pauli | str) -> int:
     """Build integer mask for input Pauli.
 
     This is an integer representation of the binary string with a one where
     there are Paulis, and zero where there are identities.
     """
+    pauli = Pauli(pauli)
     pauli_mask: ndarray[Any, dtype[bool_]] = pauli.z | pauli.x
     packed_mask: list[int] = packbits(  # pylint: disable=no-member
         pauli_mask, bitorder="little"

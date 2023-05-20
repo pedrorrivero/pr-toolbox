@@ -8,7 +8,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Quantum circuits tools."""
+"""Quantum circuit measurement tools."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from qiskit.quantum_info.operators import Pauli
 
 
 # TODO: `QuantumCircuit.measure_pauli(pauli)` (i.e. Qiskit-Terra)
-def build_pauli_measurement(pauli: Pauli) -> QuantumCircuit:
+def build_pauli_measurement(pauli: Pauli | str) -> QuantumCircuit:
     """Build measurement circuit for a given Pauli operator.
 
     Note: if Pauli is I for all qubits, this function generates a circuit to
@@ -28,6 +28,7 @@ def build_pauli_measurement(pauli: Pauli) -> QuantumCircuit:
     constant (1) and does not need to be performed. We leave this behavior as
     default nonetheless.
     """
+    pauli = Pauli(pauli)
     measured_qubit_indices = arange(pauli.num_qubits)[pauli.z | pauli.x]
     measured_qubit_indices = set(measured_qubit_indices.tolist()) or {0}
     circuit = QuantumCircuit(pauli.num_qubits, len(measured_qubit_indices))
