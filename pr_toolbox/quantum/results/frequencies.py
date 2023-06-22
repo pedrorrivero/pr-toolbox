@@ -14,11 +14,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
+from typing import Union
 
 from numpy import sqrt
-from qiskit.result import QuasiDistribution, Counts
+from qiskit.result import Counts, QuasiDistribution
 
-FrequenciesLike = Counts | QuasiDistribution
+FrequenciesLike = Union[Counts, QuasiDistribution]  # TODO: Fix
 
 
 ################################################################################
@@ -34,17 +35,53 @@ def map_frequencies(frequencies: FrequenciesLike, mapper: Callable) -> Frequenci
     Returns:
         New frequencies with readout bits mapped according to input callable.
     """
-    frequencies_dict: dict[int, int | float] = defaultdict(lambda: 0)
-    frequency_type = type(frequencies)
+
     if isinstance(frequencies, Counts):
-        frequencies = frequencies.int_outcomes()
-    for readout, freq in frequencies.items():
+        return map_counts(frequencies, mapper)
+    if isinstance(frequencies, QuasiDistribution):
+        return map_quasi_dists(frequencies, mapper)
+    raise TypeError("Frequencies of type (Counts, QuasiDistribution) are expected for mapping.")
+
+
+def map_counts(counts: Counts, mapper: Callable) -> Counts:
+    """Map counts by reassigning keys according to input callable.
+
+    Args:
+        counts: the counts to process.
+        mapper: the callable to map readout bits (i.e. counts keys).
+
+    Returns:
+        New counts with readout bits mapped according to input callable.
+    """
+    counts_dict: dict[int, int] = defaultdict(lambda: 0)
+    for readout, freq in counts.int_outcomes().items():
         readout = mapper(readout)
-        frequencies_dict[readout] += freq
-    return frequency_type(frequencies_dict)
+        counts_dict[readout] += freq
+    return Counts(counts_dict)
 
 
-def bitflip_frequencies(frequencies: QuasiDistribution | Counts, bitflips: int) -> QuasiDistribution:
+def map_quasi_dists(quasi_dists: QuasiDistribution, mapper: Callable) -> QuasiDistribution:
+    """Map quasi-distributions by reassigning keys according to input callable.
+
+    Args:
+        quasi_dists: the quasi-distributions to process.
+        mapper: the callable to map readout bits (i.e. counts keys).
+
+    Returns:
+        New QuasiDistribution with readout bits mapped according to input callable.
+    """
+    counts_dict: dict[int, float] = defaultdict(lambda: 0)
+    for readout, freq in quasi_dists.items():
+        readout = mapper(readout)
+        counts_dict[readout] += freq
+    return QuasiDistribution(
+        counts_dict, shots=quasi_dists.shots, stddev_upper_bound=quasi_dists.stddev_upper_bound
+    )
+
+
+def bitflip_frequencies(
+    frequencies: QuasiDistribution | Counts, bitflips: int
+) -> QuasiDistribution:
     """Flip readout bits in frequencies according to the input bitflips (int encoded).
 
     Args:

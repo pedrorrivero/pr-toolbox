@@ -15,6 +15,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from collections.abc import Sequence
+from typing import Union
 
 from numpy import array, dot, real_if_close, sqrt, vstack
 from qiskit.opflow import PauliSumOp
@@ -26,10 +27,14 @@ from qiskit.result import Counts, QuasiDistribution
 from pr_toolbox.binary import parity_bit
 from pr_toolbox.quantum.operators import pauli_integer_mask
 
-from .frequencies import bitmask_frequencies, convert_counts_to_quasi_dists, FrequenciesLike
+from .frequencies import (
+    FrequenciesLike,
+    bitmask_frequencies,
+    convert_counts_to_quasi_dists,
+)
 
 ReckoningResult = namedtuple("ReckoningResult", ("expval", "std_error"))
-OperatorType = BaseOperator | PauliSumOp | str  # TODO: to types
+OperatorType = Union[BaseOperator, PauliSumOp, str]  # TODO: to types
 
 
 ################################################################################
@@ -48,9 +53,9 @@ class ExpvalReckoner(ABC):
     ## API
     ################################################################################
     def reckon(
-            self,
-            frequencies_list: Sequence[FrequenciesLike] | FrequenciesLike,
-            operator_list: Sequence[OperatorType] | OperatorType,
+        self,
+        frequencies_list: Sequence[FrequenciesLike] | FrequenciesLike,
+        operator_list: Sequence[OperatorType] | OperatorType,
     ) -> ReckoningResult:
         """Compute expectation value for the sum of the input operators.
 
@@ -74,7 +79,9 @@ class ExpvalReckoner(ABC):
         std_error = array(std_error).tolist()
         return ReckoningResult(expval, std_error)
 
-    def reckon_operator(self, frequencies: FrequenciesLike, operator: OperatorType) -> ReckoningResult:
+    def reckon_operator(
+        self, frequencies: FrequenciesLike, operator: OperatorType
+    ) -> ReckoningResult:
         """Reckon expectation value from frequencies and operator.
 
         Note: This function assumes that the input operators are measurable entirely
@@ -139,27 +146,31 @@ class ExpvalReckoner(ABC):
     ################################################################################
     @abstractmethod
     def _reckon(
-            self,
-            frequencies_list: Sequence[QuasiDistribution],
-            operator_list: Sequence[SparsePauliOp],
+        self,
+        frequencies_list: Sequence[QuasiDistribution],
+        operator_list: Sequence[SparsePauliOp],
     ) -> ReckoningResult:
         expval = 0.0
         variance = 0.0
         for value, error in (
-                self._reckon_operator(frequencies, operator)
-                for frequencies, operator in zip(frequencies_list, operator_list)
+            self._reckon_operator(frequencies, operator)
+            for frequencies, operator in zip(frequencies_list, operator_list)
         ):
             expval += value
-            variance += error ** 2
+            variance += error**2
         return ReckoningResult(expval, sqrt(variance))
 
     @abstractmethod
-    def _reckon_operator(self, frequencies: QuasiDistribution, operator: SparsePauliOp) -> ReckoningResult:
-        value_std_error_pairs = [self._reckon_pauli(frequencies, pauli) for pauli in operator.paulis]
+    def _reckon_operator(
+        self, frequencies: QuasiDistribution, operator: SparsePauliOp
+    ) -> ReckoningResult:
+        value_std_error_pairs = [
+            self._reckon_pauli(frequencies, pauli) for pauli in operator.paulis
+        ]
         values, std_errors = vstack(value_std_error_pairs).T  # Note: like zip but array output
         coeffs = array(operator.coeffs)
         expval = dot(values, coeffs)
-        variance = dot(std_errors.real ** 2, (coeffs.real ** 2 + coeffs.imag ** 2))
+        variance = dot(std_errors.real**2, (coeffs.real**2 + coeffs.imag**2))
         return ReckoningResult(expval, sqrt(variance))
 
     @abstractmethod
@@ -172,12 +183,13 @@ class ExpvalReckoner(ABC):
 
     @abstractmethod
     def _reckon_frequencies(self, frequencies: QuasiDistribution) -> ReckoningResult:
+        shots = frequencies.shots or 1
         expval: float = 0.0
         for readout, freq in frequencies.items():
             observation = (-1) ** parity_bit(readout, even=True)
             expval += observation * freq
-        variance = 1 - expval ** 2
-        std_error = sqrt(variance)
+        variance = 1 - expval**2
+        std_error = sqrt(variance / shots)
         return ReckoningResult(expval, std_error)
 
     ################################################################################
@@ -185,10 +197,11 @@ class ExpvalReckoner(ABC):
     ################################################################################
 
     @classmethod
-    def _validate_frequencies_list(cls, frequencies_list: Sequence[FrequenciesLike] | FrequenciesLike) -> tuple[
-        QuasiDistribution, ...]:
+    def _validate_frequencies_list(
+        cls, frequencies_list: Sequence[FrequenciesLike] | FrequenciesLike
+    ) -> tuple[QuasiDistribution, ...]:
         """Validate frequencies."""
-        if isinstance(frequencies_list, (FrequenciesLike, dict)):
+        if isinstance(frequencies_list, (Counts, QuasiDistribution, dict)):
             frequencies_list = (frequencies_list,)
         if not isinstance(frequencies_list, Sequence):
             raise TypeError("Expected Sequence object.")
@@ -197,6 +210,8 @@ class ExpvalReckoner(ABC):
     @staticmethod
     def _validate_frequencies(frequencies: FrequenciesLike) -> QuasiDistribution:
         """Validate frequencies."""
+        if isinstance(frequencies, QuasiDistribution):
+            return frequencies
         if isinstance(frequencies, (Counts, dict)):
             frequencies = Counts(frequencies)
             frequencies = convert_counts_to_quasi_dists(frequencies)
@@ -206,8 +221,8 @@ class ExpvalReckoner(ABC):
 
     @classmethod
     def _validate_operator_list(
-            cls,
-            operator_list: Sequence[OperatorType] | OperatorType,
+        cls,
+        operator_list: Sequence[OperatorType] | OperatorType,
     ) -> tuple[SparsePauliOp, ...]:
         """Validate operator list."""
         if isinstance(operator_list, (BaseOperator, PauliSumOp, str)):
@@ -234,7 +249,7 @@ class ExpvalReckoner(ABC):
 
     @staticmethod
     def _cross_validate_lists(
-            frequencies_list: Sequence[QuasiDistribution], operator_list: Sequence[SparsePauliOp]
+        frequencies_list: Sequence[QuasiDistribution], operator_list: Sequence[SparsePauliOp]
     ) -> None:
         """Cross validate frequencies and operator lists."""
         # TODO: validate num_bits -> Need to check every entry in frequencies (expensive)
@@ -253,11 +268,13 @@ class CanonicalReckoner(ExpvalReckoner):
     """Canonical expectation value reckoning class."""
 
     def _reckon(
-            self, frequencies_list: Sequence[QuasiDistribution], operator_list: Sequence[SparsePauliOp]
+        self, frequencies_list: Sequence[QuasiDistribution], operator_list: Sequence[SparsePauliOp]
     ) -> ReckoningResult:
         return super()._reckon(frequencies_list, operator_list)
 
-    def _reckon_operator(self, frequencies: QuasiDistribution, operator: SparsePauliOp) -> ReckoningResult:
+    def _reckon_operator(
+        self, frequencies: QuasiDistribution, operator: SparsePauliOp
+    ) -> ReckoningResult:
         return super()._reckon_operator(frequencies, operator)
 
     def _reckon_pauli(self, frequencies: QuasiDistribution, pauli: Pauli) -> ReckoningResult:
