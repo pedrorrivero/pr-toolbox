@@ -16,7 +16,7 @@ from numpy import isclose, sqrt
 from numpy.random import default_rng
 from pytest import mark, raises
 from qiskit.quantum_info.operators import Pauli, SparsePauliOp
-from qiskit.result import Counts
+from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.reckoning import (
     CanonicalReckoner,
@@ -32,40 +32,60 @@ class TestExpvalReckoner:
     """Test ExpvalReckoner interface."""
 
     @mark.parametrize(
-        "counts, expected",
+        "data, expected",
         [
-            ({}, (Counts({}),)),
-            (Counts({}), (Counts({}),)),
-            ({0: 1}, (Counts({0: 1}),)),
-            (Counts({0: 1}), (Counts({0: 1}),)),
-            ({0: 0, 1: 1}, (Counts({0: 0, 1: 1}),)),
-            (Counts({0: 0, 1: 1}), (Counts({0: 0, 1: 1}),)),
-            ([{}], (Counts({}),)),
-            ([Counts({})], (Counts({}),)),
-            ([{0: 1}], (Counts({0: 1}),)),
-            ([Counts({0: 1})], (Counts({0: 1}),)),
-            ([{0: 0, 1: 1}], (Counts({0: 0, 1: 1}),)),
-            ([Counts({0: 0, 1: 1})], (Counts({0: 0, 1: 1}),)),
-            ([{}, {0: 0, 1: 1}], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([Counts({}), {0: 0, 1: 1}], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([{}, Counts({0: 0, 1: 1})], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([Counts({}), Counts({0: 0, 1: 1})], (Counts({}), Counts({0: 0, 1: 1}))),
+            ({}, (QuasiDistribution({}),)),
+            ({0: 1}, (QuasiDistribution({0: 1}),)),
+            ({0: 0, 1: 1}, (QuasiDistribution({0: 0, 1: 1}),)),
         ],
     )
-    def test_validate_counts_list(self, counts, expected):
-        """Test validate counts."""
-        valid = ExpvalReckoner._validate_counts_list(counts)
+    def test_validate_frequencies(self, data, expected):
+        """Test validate frequencies."""
+        for frequencies in (data, Counts(data), QuasiDistribution(data)):
+            valid = ExpvalReckoner._validate_frequencies_list(frequencies)
+            assert isinstance(valid, tuple)
+            assert all(isinstance(c, QuasiDistribution) for c in valid)
+            assert valid == expected
+
+    @mark.parametrize(
+        "frequencies, expected",
+        [
+            ([{}], (QuasiDistribution({}),)),
+            ([Counts({})], (QuasiDistribution({}),)),
+            ([QuasiDistribution({})], (QuasiDistribution({}),)),
+            ([{0: 1}], (QuasiDistribution({0: 1}),)),
+            ([Counts({0: 1})], (QuasiDistribution({0: 1}),)),
+            ([QuasiDistribution({0: 1})], (QuasiDistribution({0: 1}),)),
+            ([{0: 0, 1: 1}], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([Counts({0: 0, 1: 1})], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([QuasiDistribution({0: 0, 1: 1})], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([{}, {0: 0, 1: 1}], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([Counts({}), {0: 0, 1: 1}], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([QuasiDistribution({}), {0: 0, 1: 1}], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([{}, Counts({0: 0, 1: 1})], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([{}, QuasiDistribution({0: 0, 1: 1})], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([Counts({}), Counts({0: 0, 1: 1})], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([Counts({}), QuasiDistribution({0: 0, 1: 1})],
+             (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([QuasiDistribution({}), Counts({0: 0, 1: 1})],
+             (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+        ],
+    )
+    def test_validate_frequencies_list(self, frequencies, expected):
+        """Test validate frequency sequences."""
+        valid = ExpvalReckoner._validate_frequencies_list(frequencies)
         assert isinstance(valid, tuple)
-        assert all(isinstance(c, Counts) for c in valid)
+        assert all(isinstance(c, QuasiDistribution) for c in valid)
         assert valid == expected
 
     @mark.parametrize("counts", NO_ITERS)
-    def test_validate_counts_list_type_error(self, counts):
-        """Test validate counts raises errors."""
+    def test_validate_frequencies_list_type_error(self, counts):
+        """Test validate frequencies raises errors."""
         with raises(TypeError):
-            ExpvalReckoner._validate_counts_list(counts)
+            ExpvalReckoner._validate_frequencies_list(counts)
         with raises(TypeError):
-            ExpvalReckoner._validate_counts_list([counts])
+            ExpvalReckoner._validate_frequencies_list([counts])
 
     @mark.parametrize(
         "operators, expected",
@@ -136,25 +156,25 @@ class TestCanonicalReckoner:
             ([], [], ReckoningResult(0, 0)),
             ([Counts({})], ["Z"], ReckoningResult(0, 1)),
             ([Counts({0: 0})], ["I"], ReckoningResult(0, 1)),
-            ([Counts({0: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1})], ["I"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["I"], ReckoningResult(1, 0)),
-            ([Counts({0: 1})], ["Z"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1})], ["Z"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Z"], ReckoningResult(-1, 0)),
-            ([Counts({0: 1})], ["X"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1})], ["X"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["X"], ReckoningResult(-1, 0)),
-            ([Counts({0: 1})], ["Y"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1})], ["Y"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Y"], ReckoningResult(-1, 0)),
             ([Counts({0: 1, 1: 1})], ["I"], ReckoningResult(1, 0)),
-            ([Counts({0: 1, 1: 1})], ["Z"], ReckoningResult(0, 1 / sqrt(2))),
+            ([QuasiDistribution({0: 1, 1: 1})], ["Z"], ReckoningResult(0, 1 / sqrt(2))),
             ([Counts({0: 1, 1: 1})], ["X"], ReckoningResult(0, 1 / sqrt(2))),
-            ([Counts({0: 1, 1: 1})], ["Y"], ReckoningResult(0, 1 / sqrt(2))),
+            ([QuasiDistribution({0: 1, 1: 1})], ["Y"], ReckoningResult(0, 1 / sqrt(2))),
             (
                 [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
                 ["I", "Z"],
                 ReckoningResult(1, 1 / sqrt(2)),
             ),
             (
-                [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
+                [QuasiDistribution({0: 1, 1: 1}), QuasiDistribution({0: 1, 1: 1})],
                 ["X", "Z"],
                 ReckoningResult(0, 1),
             ),
@@ -303,10 +323,10 @@ class TestCanonicalReckoner:
             ({0: 1, 1: 1}, ReckoningResult(0, 1 / sqrt(2))),
         ],
     )
-    def test_reckon_counts(self, reckoner, counts, expected):
-        """Test reckon counts."""
+    def test_reckon_frequencies(self, reckoner, counts, expected):
+        """Test reckon frequencies."""
         counts = Counts(counts)
-        result = reckoner.reckon_counts(counts)
+        result = reckoner.reckon_frequencies(counts)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, expected.expval)
