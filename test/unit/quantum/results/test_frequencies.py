@@ -9,41 +9,49 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
-
+from numpy import sqrt
 from pytest import mark
-from qiskit.result import Counts
+from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.frequencies import (
-    bitflip_counts,
-    bitmask_counts,
-    map_counts,
+    bitflip_frequencies,
+    bitmask_frequencies,
+    map_frequencies, convert_counts_to_quasi_dists,
 )
 
 
 ################################################################################
 ## TESTS
 ################################################################################
-class TestMapCounts:
-    """Test map counts."""
+class TestMapFrequencies:
+    """Test map frequencies."""
 
     @mark.parametrize(
-        "counts, map, expected",
+        "frequencies, map, expected",
         [
-            ({}, lambda _: None, {}),
-            ({0: 1}, lambda _: 0, {0: 1}),
-            ({0: 1}, lambda _: 1, {1: 1}),
-            ({0: 1, 1: 1}, lambda _: 1, {1: 2}),
-            ({0: 0, 1: 1}, lambda k: k + 1, {1: 0, 2: 1}),
+            (Counts({}), lambda _: None, {}),
+            (QuasiDistribution({}), lambda _: None, {}),
+
+            (Counts({0: 1}), lambda _: 0, {0: 1}),
+            (QuasiDistribution({0: 1}), lambda _: 0, {0: 1}),
+
+            (Counts({0: 1}), lambda _: 1, {1: 1}),
+            (QuasiDistribution({0: 1}), lambda _: 1, {1: 1}),
+
+            (Counts({0: 1, 1: 1}), lambda _: 1, {1: 2}),
+            (QuasiDistribution({0: 0.5, 1: 0.5}), lambda _: 1, {1: 1}),
+
+            (Counts({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
+            (QuasiDistribution({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
         ],
     )
-    def test_map_counts(self, counts, map, expected):
-        """Test map counts base functionality."""
-        counts = Counts(counts)
-        assert map_counts(counts, map) == Counts(expected)
+    def test_map_frequencies(self, frequencies, map, expected):
+        """Test map frequencies base functionality."""
+        assert map_frequencies(frequencies, map) == type(frequencies)(expected)
 
 
-class TestBitflipCounts:
-    """Test bitflip counts."""
+class TestBitflipFrequencies:
+    """Test bitflip frequencies."""
 
     @mark.parametrize(
         "counts, bitflips, expected",
@@ -58,10 +66,10 @@ class TestBitflipCounts:
             ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b11, {0b00: 3, 0b01: 2, 0b10: 1, 0b11: 0}),
         ],
     )
-    def test_bitflip_counts(self, counts, bitflips, expected):
-        """Test bitflip counts base functionality."""
+    def test_bitflip_frequencies(self, counts, bitflips, expected):
+        """Test bitflip frequencies base functionality."""
         counts = Counts(counts)
-        assert bitflip_counts(counts, bitflips) == Counts(expected)
+        assert bitflip_frequencies(counts, bitflips) == Counts(expected)
 
 
 class TestMaskCounts:
@@ -80,7 +88,31 @@ class TestMaskCounts:
             ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b11, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
         ],
     )
-    def test_bitmask_counts(self, counts, mask, expected):
-        """Test mask counts base functionality."""
+    def test_bitmask_frequencies(self, counts, mask, expected):
+        """Test mask frequencies base functionality."""
         counts = Counts(counts)
-        assert bitmask_counts(counts, mask) == Counts(expected)
+        assert bitmask_frequencies(counts, mask) == Counts(expected)
+
+
+class TestFrequencyConversion:
+    """Test conversion from counts to quasi-distributions."""
+
+    @mark.parametrize(
+        "counts",
+        [
+            Counts({}),
+            Counts({0b00: 0, 0b01: 1}),
+            Counts({0: 1, 1: 1}),
+            Counts({0: 0, 1: 5}),
+            Counts({12: 1, 13: 5, 14: 1}),
+            Counts({5: 6})
+        ],
+    )
+    def test_convert_counts_to_quasi_dists(self, counts):
+        """Test convert counts functionality."""
+        quasi_dists = convert_counts_to_quasi_dists(counts)
+        assert isinstance(quasi_dists, QuasiDistribution)
+        assert quasi_dists.shots == counts.shots()
+        if quasi_dists.shots:
+            assert quasi_dists.stddev_upper_bound == sqrt(1 / quasi_dists.shots)
+        assert quasi_dists == {k: v / (quasi_dists.shots or 1) for k, v in counts.int_outcomes().items()}
