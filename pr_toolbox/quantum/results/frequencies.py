@@ -79,9 +79,7 @@ def map_quasi_dists(quasi_dists: QuasiDistribution, mapper: Callable) -> QuasiDi
     )
 
 
-def bitflip_frequencies(
-    frequencies: QuasiDistribution | Counts, bitflips: int
-) -> QuasiDistribution:
+def bitflip_frequencies(frequencies: FrequenciesLike, bitflips: int) -> FrequenciesLike:
     """Flip readout bits in frequencies according to the input bitflips (int encoded).
 
     Args:
@@ -94,7 +92,7 @@ def bitflip_frequencies(
     return map_frequencies(frequencies, lambda readout: readout ^ bitflips)
 
 
-def bitmask_frequencies(frequencies: QuasiDistribution | Counts, bitmask: int) -> QuasiDistribution:
+def bitmask_frequencies(frequencies: FrequenciesLike, bitmask: int) -> FrequenciesLike:
     """Apply mask to readout bits in frequencies.
 
     Args:
