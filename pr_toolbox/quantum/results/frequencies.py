@@ -103,7 +103,7 @@ def bitmask_frequencies(frequencies: FrequenciesLike, bitmask: int) -> Frequenci
         bitmask: the bit mask to be applied.
 
     Returns:
-        New counts with readout bits masked according to input.
+        New frequencies with readout bits masked according to input.
     """
     return map_frequencies(frequencies, lambda readout: readout & bitmask)
 
