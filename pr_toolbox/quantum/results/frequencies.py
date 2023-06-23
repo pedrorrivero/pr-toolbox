@@ -40,7 +40,10 @@ def map_frequencies(frequencies: FrequenciesLike, mapper: Callable) -> Frequenci
         return map_counts(frequencies, mapper)
     if isinstance(frequencies, QuasiDistribution):
         return map_quasi_dists(frequencies, mapper)
-    raise TypeError("Frequencies of type (Counts, QuasiDistribution) are expected for mapping.")
+    raise TypeError(
+        f"Invalid frequencies type. Expected `Counts` or `QuasiDistribution`"
+        f" but got {type(frequencies)} instead."
+    )
 
 
 def map_counts(counts: Counts, mapper: Callable) -> Counts:
@@ -70,12 +73,12 @@ def map_quasi_dists(quasi_dists: QuasiDistribution, mapper: Callable) -> QuasiDi
     Returns:
         New QuasiDistribution with readout bits mapped according to input callable.
     """
-    counts_dict: dict[int, float] = defaultdict(lambda: 0)
+    frequencies_dict: dict[int, float] = defaultdict(lambda: 0)
     for readout, freq in quasi_dists.items():
         readout = mapper(readout)
-        counts_dict[readout] += freq
+        frequencies_dict[readout] += freq
     return QuasiDistribution(
-        counts_dict, shots=quasi_dists.shots, stddev_upper_bound=quasi_dists.stddev_upper_bound
+        frequencies_dict, shots=quasi_dists.shots, stddev_upper_bound=quasi_dists.stddev_upper_bound
     )
 
 
