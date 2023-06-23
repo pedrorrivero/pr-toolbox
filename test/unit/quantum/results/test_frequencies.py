@@ -53,7 +53,7 @@ class TestMapFrequencies:
             assert frequencies.shots == expected_frequencies.shots
             assert frequencies.stddev_upper_bound == expected_frequencies.stddev_upper_bound
 
-    @mark.parametrize("frequencies", TYPES)
+    @mark.parametrize("frequencies", [t for t in TYPES if not (isinstance(t, dict))])
     def test_wrong_frequency_type(self, frequencies):
         """Test a non-FrequencyLike input."""
         with raises(TypeError):

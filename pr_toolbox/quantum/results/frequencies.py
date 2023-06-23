@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
+from functools import singledispatch
 from typing import Union
 
 from numpy import sqrt
@@ -25,7 +26,10 @@ FrequenciesLike = Union[Counts, QuasiDistribution]
 ################################################################################
 ## FREQUENCIES
 ################################################################################
-def map_frequencies(frequencies: FrequenciesLike, mapper: Callable) -> FrequenciesLike:
+@singledispatch
+def map_frequencies(
+    frequencies: FrequenciesLike | dict, mapper: Callable
+) -> FrequenciesLike | dict:
     """Map frequencies by reassigning keys according to input callable.
 
     Args:
@@ -35,17 +39,20 @@ def map_frequencies(frequencies: FrequenciesLike, mapper: Callable) -> Frequenci
     Returns:
         New frequencies with readout bits mapped according to input callable.
     """
+    if not isinstance(frequencies, (Counts, QuasiDistribution, dict)):
+        raise TypeError(
+            f"Invalid frequencies type. Expected `Counts` or `QuasiDistribution` or `dict'"
+            f" but got {type(frequencies)} instead."
+        )
 
-    if isinstance(frequencies, Counts):
-        return map_counts(frequencies, mapper)
-    if isinstance(frequencies, QuasiDistribution):
-        return map_quasi_dists(frequencies, mapper)
-    raise TypeError(
-        f"Invalid frequencies type. Expected `Counts` or `QuasiDistribution`"
-        f" but got {type(frequencies)} instead."
-    )
+    frequencies_dict: dict[int, int | float] = defaultdict(lambda: 0)
+    for readout, freq in frequencies.items():
+        readout = mapper(readout)
+        frequencies_dict[readout] += freq
+    return frequencies_dict
 
 
+@map_frequencies.register(Counts)
 def map_counts(counts: Counts, mapper: Callable) -> Counts:
     """Map counts by reassigning keys according to input callable.
 
@@ -56,13 +63,11 @@ def map_counts(counts: Counts, mapper: Callable) -> Counts:
     Returns:
         New counts with readout bits mapped according to input callable.
     """
-    counts_dict: dict[int, int] = defaultdict(lambda: 0)
-    for readout, freq in counts.int_outcomes().items():
-        readout = mapper(readout)
-        counts_dict[readout] += freq
+    counts_dict: dict[int, int] = map_frequencies(counts.int_outcomes(), mapper)
     return Counts(counts_dict)
 
 
+@map_frequencies.register(QuasiDistribution)
 def map_quasi_dists(quasi_dists: QuasiDistribution, mapper: Callable) -> QuasiDistribution:
     """Map quasi-distributions by reassigning keys according to input callable.
 
@@ -73,12 +78,9 @@ def map_quasi_dists(quasi_dists: QuasiDistribution, mapper: Callable) -> QuasiDi
     Returns:
         New QuasiDistribution with readout bits mapped according to input callable.
     """
-    frequencies_dict: dict[int, float] = defaultdict(lambda: 0)
-    for readout, freq in quasi_dists.items():
-        readout = mapper(readout)
-        frequencies_dict[readout] += freq
+    quasi_dists_dict: dict[int, float] = map_frequencies(dict(quasi_dists), mapper)
     return QuasiDistribution(
-        frequencies_dict, shots=quasi_dists.shots, stddev_upper_bound=quasi_dists.stddev_upper_bound
+        quasi_dists_dict, shots=quasi_dists.shots, stddev_upper_bound=quasi_dists.stddev_upper_bound
     )
 
 
