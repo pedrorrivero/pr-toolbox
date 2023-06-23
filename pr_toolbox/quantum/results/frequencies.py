@@ -15,7 +15,8 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 
-from qiskit.result import Counts
+from numpy import sqrt
+from qiskit.result import Counts, QuasiDistribution
 
 
 ################################################################################
@@ -62,3 +63,16 @@ def bitmask_counts(counts: Counts, bitmask: int) -> Counts:
         New counts with readout bits masked according to input.
     """
     return map_counts(counts, lambda readout: readout & bitmask)
+
+
+def counts_to_quasi_dists(counts: Counts) -> QuasiDistribution:
+    """Infers a :class:`~qiskit.result.QuasiDistribution` from :class:`~qiskit.result.Counts`.
+    Args:
+        counts: the counts to convert.
+    Returns:
+        New QuasiDistribution inferred from counts.
+    """
+    shots = counts.shots()
+    std_dev = sqrt(1 / shots) if shots else None
+    probabilities = {k: v / (shots or 1) for k, v in counts.int_outcomes().items()}
+    return QuasiDistribution(probabilities, shots=shots, stddev_upper_bound=std_dev)
