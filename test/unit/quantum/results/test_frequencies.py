@@ -9,8 +9,10 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
+from test import TYPES
+
 from numpy import sqrt
-from pytest import mark
+from pytest import mark, raises
 from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.frequencies import (
@@ -45,6 +47,12 @@ class TestMapFrequencies:
     def test_map_frequencies(self, frequencies, map, expected):
         """Test map frequencies base functionality."""
         assert map_frequencies(frequencies, map) == type(frequencies)(expected)
+
+    @mark.parametrize("frequencies", TYPES)
+    def test_wrong_frequency_type(self, frequencies):
+        """Test a non-FrequencyLike input."""
+        with raises(TypeError):
+            map_frequencies(frequencies, lambda _: None)
 
 
 class TestBitflipFrequencies:

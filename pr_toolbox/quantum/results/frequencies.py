@@ -19,7 +19,7 @@ from typing import Union
 from numpy import sqrt
 from qiskit.result import Counts, QuasiDistribution
 
-FrequenciesLike = Union[Counts, QuasiDistribution]  # TODO: Fix
+FrequenciesLike = Union[Counts, QuasiDistribution]
 
 
 ################################################################################
