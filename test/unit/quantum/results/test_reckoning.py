@@ -49,6 +49,9 @@ class TestExpvalReckoner:
     @mark.parametrize(
         "frequencies, expected",
         [
+            ({}, (QuasiDistribution({}),)),
+            (Counts({}), (QuasiDistribution({}),)),
+            (QuasiDistribution({}), (QuasiDistribution({}),)),
             ([{}], (QuasiDistribution({}),)),
             ([Counts({})], (QuasiDistribution({}),)),
             ([QuasiDistribution({})], (QuasiDistribution({}),)),
