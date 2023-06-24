@@ -57,7 +57,6 @@ def map_dict(frequencies: dict, mapper) -> dict:
     """
     if not all(isinstance(k, int) for k in frequencies.keys()):
         raise TypeError("Invalid key types for frequencies. Keys must be of type `int'.")
-
     if not all(isinstance(v, (int, float)) for v in frequencies.values()):
         raise TypeError(
             "Invalid value types for frequencies. Values must be of type `int' or `float'."
