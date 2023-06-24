@@ -86,7 +86,7 @@ def map_counts(counts: Counts, mapper: Callable) -> Counts:
 
 
 @map_frequencies.register
-def map_quasi_dist(quasi_dist: QuasiDistribution, mapper) -> QuasiDistribution:
+def map_quasi_dist(quasi_dist: QuasiDistribution, mapper: Callable) -> QuasiDistribution:
     """Map quasi-distributions by reassigning keys according to input callable.
 
     Args:
