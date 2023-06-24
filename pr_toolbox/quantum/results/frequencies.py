@@ -29,7 +29,9 @@ FrequenciesLike = Union[Counts, QuasiDistribution]
 
 
 @singledispatch
-def map_frequencies(frequencies: FrequenciesLike | dict, mapper) -> FrequenciesLike:
+def map_frequencies(
+    frequencies: FrequenciesLike | dict, mapper: Callable
+) -> FrequenciesLike | dict:
     """Map frequencies by reassigning keys according to input callable.
 
     Args:
