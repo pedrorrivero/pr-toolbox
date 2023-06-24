@@ -32,19 +32,18 @@ class TestExpvalReckoner:
     """Test ExpvalReckoner interface."""
 
     @mark.parametrize(
-        "data, expected",
+        "frequencies, expected",
         [
-            ({}, (QuasiDistribution({}),)),
-            ({0: 1}, (QuasiDistribution({0: 1}),)),
-            ({0: 0, 1: 1}, (QuasiDistribution({0: 0, 1: 1}),)),
+            ({}, QuasiDistribution({})),
+            ({0: 1}, QuasiDistribution({0: 1})),
+            ({0: 0, 1: 1}, QuasiDistribution({0: 0, 1: 1})),
         ],
     )
-    def test_validate_frequencies(self, data, expected):
+    def test_validate_frequencies(self, frequencies, expected):
         """Test validate frequencies."""
-        for frequencies in (data, Counts(data), QuasiDistribution(data)):
-            valid = ExpvalReckoner._validate_frequencies_list(frequencies)
-            assert isinstance(valid, tuple)
-            assert all(isinstance(c, QuasiDistribution) for c in valid)
+        for frequencies in (frequencies, Counts(frequencies), QuasiDistribution(frequencies)):
+            valid = ExpvalReckoner._validate_frequencies(frequencies)
+            assert isinstance(valid, QuasiDistribution)
             assert valid == expected
 
     @mark.parametrize(
@@ -171,22 +170,40 @@ class TestCanonicalReckoner:
         [
             ([], [], ReckoningResult(0, 0)),
             ([Counts({})], ["Z"], ReckoningResult(0, 1)),
+            ([QuasiDistribution({})], ["Z"], ReckoningResult(0, 1)),
             ([Counts({0: 0})], ["I"], ReckoningResult(0, 1)),
+            ([QuasiDistribution({0: 0})], ["I"], ReckoningResult(0, 1)),
+            ([Counts({0: 1})], ["I"], ReckoningResult(1, 0)),
             ([QuasiDistribution({0: 1}, shots=1)], ["I"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({1: 1})], ["I"], ReckoningResult(1, 0)),
+            ([Counts({0: 1})], ["Z"], ReckoningResult(1, 0)),
             ([QuasiDistribution({0: 1}, shots=1)], ["Z"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Z"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["Z"], ReckoningResult(-1, 0)),
+            ([Counts({0: 1})], ["X"], ReckoningResult(1, 0)),
             ([QuasiDistribution({0: 1}, shots=1)], ["X"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["X"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["X"], ReckoningResult(-1, 0)),
+            ([Counts({0: 1})], ["Y"], ReckoningResult(1, 0)),
             ([QuasiDistribution({0: 1}, shots=1)], ["Y"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Y"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["Y"], ReckoningResult(-1, 0)),
             ([Counts({0: 1, 1: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)], ["I"], ReckoningResult(1, 0)),
+            ([Counts({0: 1, 1: 1})], ["Z"], ReckoningResult(0, 1 / sqrt(2))),
             (
                 [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
                 ["Z"],
                 ReckoningResult(0, 1 / sqrt(2)),
             ),
             ([Counts({0: 1, 1: 1})], ["X"], ReckoningResult(0, 1 / sqrt(2))),
+            (
+                [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["X"],
+                ReckoningResult(0, 1 / sqrt(2)),
+            ),
+            ([Counts({0: 1, 1: 1})], ["Y"], ReckoningResult(0, 1 / sqrt(2))),
             (
                 [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
                 ["Y"],
@@ -202,13 +219,22 @@ class TestCanonicalReckoner:
                     QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
                     QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
                 ],
+                ["I", "Z"],
+                ReckoningResult(1, 1 / sqrt(2)),
+            ),
+            ([Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})], ["X", "Z"], ReckoningResult(0, 1)),
+            (
+                [
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                ],
                 ["X", "Z"],
                 ReckoningResult(0, 1),
             ),
             (
-                [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
-                [SparsePauliOp(["X", "Z"], [1, 2]), SparsePauliOp(["I"])],
-                ReckoningResult(1, sqrt(5 / 2)),
+                [Counts({0: 1, 1: 1}), QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["I", "Z"],
+                ReckoningResult(1, 1 / sqrt(2)),
             ),
         ],
     )
