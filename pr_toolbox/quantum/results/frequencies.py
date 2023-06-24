@@ -70,7 +70,7 @@ def map_dict(frequencies: dict, mapper) -> dict:
 
 
 @map_frequencies.register
-def map_counts(counts: Counts, mapper) -> Counts:
+def map_counts(counts: Counts, mapper: Callable) -> Counts:
     """Map counts by reassigning keys according to input callable.
 
     Args:
