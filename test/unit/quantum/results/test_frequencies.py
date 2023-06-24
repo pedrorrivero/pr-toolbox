@@ -9,8 +9,10 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
+from test import TYPES
+
 from numpy import sqrt
-from pytest import mark
+from pytest import mark, raises
 from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.frequencies import (
@@ -89,6 +91,12 @@ class TestMaskCounts:
 
 class TestFrequencyConversion:
     """Test conversion from counts to quasi-distributions."""
+
+    @mark.parametrize("counts", TYPES)
+    def test_wrong_counts_type(self, counts):
+        """Test wrong counts types upon conversion."""
+        with raises(TypeError):
+            counts_to_quasi_dists(counts)
 
     @mark.parametrize(
         "counts",
