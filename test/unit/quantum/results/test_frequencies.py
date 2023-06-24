@@ -9,7 +9,7 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
-from test import TYPES
+from test import FLOAT, INT, ITERS, NO_INTS, TYPES
 
 from numpy import sqrt
 from pytest import mark, raises
@@ -32,14 +32,19 @@ class TestMapFrequencies:
     @mark.parametrize(
         "frequencies, map, expected",
         [
+            ({}, lambda _: None, {}),
             (Counts({}), lambda _: None, {}),
             (QuasiDistribution({}), lambda _: None, {}),
+            ({0: 1}, lambda _: 0, {0: 1}),
             (Counts({0: 1}), lambda _: 0, {0: 1}),
             (QuasiDistribution({0: 1}), lambda _: 0, {0: 1}),
+            ({0: 1}, lambda _: 1, {1: 1}),
             (Counts({0: 1}), lambda _: 1, {1: 1}),
             (QuasiDistribution({0: 1}), lambda _: 1, {1: 1}),
+            ({0: 1, 1: 1}, lambda _: 1, {1: 2}),
             (Counts({0: 1, 1: 1}), lambda _: 1, {1: 2}),
             (QuasiDistribution({0: 0.5, 1: 0.5}), lambda _: 1, {1: 1}),
+            ({0: 0, 1: 1}, lambda k: k + 1, {1: 0, 2: 1}),
             (Counts({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
             (QuasiDistribution({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
         ],
@@ -56,6 +61,17 @@ class TestMapFrequencies:
     @mark.parametrize("frequencies", [t for t in TYPES if not (isinstance(t, dict))])
     def test_wrong_frequency_type(self, frequencies):
         """Test a non-FrequencyLike input."""
+        with raises(TypeError):
+            map_frequencies(frequencies, lambda _: None)
+
+    @mark.parametrize(
+        "frequencies",
+        [{t: INT} for t in NO_INTS if t not in ITERS]
+        + [{t: FLOAT} for t in NO_INTS if t not in ITERS]
+        + [{INT: t} for t in NO_INTS if not isinstance(t, float)],
+    )
+    def test_wrong_dict_entry_types(self, frequencies):
+        """Test a dict input with wrong entry types."""
         with raises(TypeError):
             map_frequencies(frequencies, lambda _: None)
 
