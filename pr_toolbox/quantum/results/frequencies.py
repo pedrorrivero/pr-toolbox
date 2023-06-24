@@ -129,7 +129,7 @@ def bitmask_frequencies(frequencies: FrequenciesLike, bitmask: int) -> Frequenci
     return map_frequencies(frequencies, lambda readout: readout & bitmask)
 
 
-def counts_to_quasi_dists(counts: Counts) -> QuasiDistribution:
+def counts_to_quasi_dist(counts: Counts) -> QuasiDistribution:
     """Infers a :class:`~qiskit.result.QuasiDistribution` from :class:`~qiskit.result.Counts`.
 
     Args:
