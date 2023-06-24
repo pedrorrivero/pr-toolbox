@@ -26,8 +26,6 @@ FrequenciesLike = Union[Counts, QuasiDistribution]
 ################################################################################
 ## FREQUENCIES
 ################################################################################
-
-
 @singledispatch
 def map_frequencies(
     frequencies: FrequenciesLike | dict, mapper: Callable
@@ -133,8 +131,10 @@ def bitmask_frequencies(frequencies: FrequenciesLike, bitmask: int) -> Frequenci
 
 def counts_to_quasi_dists(counts: Counts) -> QuasiDistribution:
     """Infers a :class:`~qiskit.result.QuasiDistribution` from :class:`~qiskit.result.Counts`.
+
     Args:
         counts: the counts to convert.
+
     Returns:
         New QuasiDistribution inferred from counts.
     """
