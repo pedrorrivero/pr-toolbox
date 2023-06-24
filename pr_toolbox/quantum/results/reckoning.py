@@ -27,7 +27,7 @@ from qiskit.result import Counts
 from pr_toolbox.binary import parity_bit
 from pr_toolbox.quantum.operators import pauli_integer_mask
 
-from .frequencies import bitmask_counts
+from .frequencies import bitmask_frequencies
 
 ReckoningResult = namedtuple("ReckoningResult", ("expval", "std_error"))
 OperatorType = Union[BaseOperator, PauliSumOp, str]  # TODO: to types
@@ -166,7 +166,7 @@ class ExpvalReckoner(ABC):
     @abstractmethod
     def _reckon_pauli(self, counts: Counts, pauli: Pauli) -> ReckoningResult:
         mask = pauli_integer_mask(pauli)
-        counts = bitmask_counts(counts, mask)
+        counts = bitmask_frequencies(counts, mask)
         coeff = (-1j) ** pauli.phase
         expval, std_error = self._reckon_counts(counts)
         return ReckoningResult(coeff * expval, std_error)

@@ -10,14 +10,14 @@
 
 """Results tools."""
 
-from .frequencies import bitflip_counts, bitmask_counts, map_counts
+from .frequencies import bitflip_frequencies, bitmask_frequencies, map_frequencies
 from .reckoning import CanonicalReckoner, ExpvalReckoner, ReckoningResult
 
 __all__ = [
     "ReckoningResult",
     "ExpvalReckoner",
     "CanonicalReckoner",
-    "map_counts",
-    "bitflip_counts",
-    "bitmask_counts",
+    "map_frequencies",
+    "bitflip_frequencies",
+    "bitmask_frequencies",
 ]

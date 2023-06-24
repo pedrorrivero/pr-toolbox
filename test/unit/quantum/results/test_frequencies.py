@@ -9,84 +9,182 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
-from test import TYPES
+from test import FLOAT, INT, ITERS, NO_INTS, TYPES
 
 from numpy import sqrt
 from pytest import mark, raises
 from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.frequencies import (
-    bitflip_counts,
-    bitmask_counts,
+    bitflip_frequencies,
+    bitmask_frequencies,
     counts_to_quasi_dists,
-    map_counts,
+    map_frequencies,
 )
 
 
 ################################################################################
 ## TESTS
 ################################################################################
-class TestMapCounts:
-    """Test map counts."""
+class TestMapFrequencies:
+    """Test map frequencies."""
 
     @mark.parametrize(
-        "counts, map, expected",
+        "frequencies, map, expected",
         [
             ({}, lambda _: None, {}),
+            (Counts({}), lambda _: None, {}),
+            (QuasiDistribution({}), lambda _: None, {}),
             ({0: 1}, lambda _: 0, {0: 1}),
+            (Counts({0: 1}), lambda _: 0, {0: 1}),
+            (QuasiDistribution({0: 1}), lambda _: 0, {0: 1}),
             ({0: 1}, lambda _: 1, {1: 1}),
+            (Counts({0: 1}), lambda _: 1, {1: 1}),
+            (QuasiDistribution({0: 1}), lambda _: 1, {1: 1}),
             ({0: 1, 1: 1}, lambda _: 1, {1: 2}),
+            (Counts({0: 1, 1: 1}), lambda _: 1, {1: 2}),
+            (QuasiDistribution({0: 0.5, 1: 0.5}), lambda _: 1, {1: 1}),
             ({0: 0, 1: 1}, lambda k: k + 1, {1: 0, 2: 1}),
+            (Counts({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
+            (QuasiDistribution({0: 0, 1: 1}), lambda k: k + 1, {1: 0, 2: 1}),
         ],
     )
-    def test_map_counts(self, counts, map, expected):
-        """Test map counts base functionality."""
-        counts = Counts(counts)
-        assert map_counts(counts, map) == Counts(expected)
+    def test_map_frequencies(self, frequencies, map, expected):
+        """Test map frequencies base functionality."""
+        mapped_frequencies = map_frequencies(frequencies, map)
+        expected_frequencies = type(frequencies)(expected)
+        assert mapped_frequencies == expected_frequencies
+        if isinstance(frequencies, QuasiDistribution):
+            assert frequencies.shots == expected_frequencies.shots
+            assert frequencies.stddev_upper_bound == expected_frequencies.stddev_upper_bound
 
-
-class TestBitflipCounts:
-    """Test bitflip counts."""
+    @mark.parametrize("frequencies", [t for t in TYPES if not (isinstance(t, dict))])
+    def test_wrong_frequency_type(self, frequencies):
+        """Test a non-FrequencyLike input."""
+        with raises(TypeError):
+            map_frequencies(frequencies, lambda _: None)
 
     @mark.parametrize(
-        "counts, bitflips, expected",
-        [
-            ({0b00: 0, 0b01: 1}, 0b00, {0b00: 0, 0b01: 1}),
-            ({0b00: 0, 0b01: 1}, 0b01, {0b00: 1, 0b01: 0}),
-            ({0b00: 0, 0b01: 1}, 0b10, {0b10: 0, 0b11: 1}),
-            ({0b00: 0, 0b01: 1}, 0b11, {0b10: 1, 0b11: 0}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b00, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b01, {0b00: 1, 0b01: 0, 0b10: 3, 0b11: 2}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b10, {0b00: 2, 0b01: 3, 0b10: 0, 0b11: 1}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b11, {0b00: 3, 0b01: 2, 0b10: 1, 0b11: 0}),
-        ],
+        "frequencies",
+        [{t: INT} for t in NO_INTS if t not in ITERS]
+        + [{t: FLOAT} for t in NO_INTS if t not in ITERS]
+        + [{INT: t} for t in NO_INTS if not isinstance(t, float)],
     )
-    def test_bitflip_counts(self, counts, bitflips, expected):
-        """Test bitflip counts base functionality."""
-        counts = Counts(counts)
-        assert bitflip_counts(counts, bitflips) == Counts(expected)
+    def test_wrong_dict_entry_types(self, frequencies):
+        """Test a dict input with wrong entry types."""
+        with raises(TypeError):
+            map_frequencies(frequencies, lambda _: None)
 
 
-class TestMaskCounts:
-    """Test mask counts."""
+class TestBitflipFrequencies:
+    """Test bitflip frequencies."""
 
     @mark.parametrize(
-        "counts, mask, expected",
+        "frequencies, bitflips, expected",
         [
-            ({0b00: 0, 0b01: 1}, 0b00, {0b00: 1}),
-            ({0b00: 0, 0b01: 1}, 0b01, {0b00: 0, 0b01: 1}),
-            ({0b00: 0, 0b01: 1}, 0b10, {0b00: 1}),
-            ({0b00: 0, 0b01: 1}, 0b11, {0b00: 0, 0b01: 1}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b00, {0b00: 6}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b01, {0b00: 2, 0b01: 4}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b10, {0b00: 1, 0b10: 5}),
-            ({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b11, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
+            (Counts({0b00: 0, 0b01: 1}), 0b00, {0b00: 0, 0b01: 1}),
+            (Counts({0b00: 0, 0b01: 1}), 0b01, {0b00: 1, 0b01: 0}),
+            (Counts({0b00: 0, 0b01: 1}), 0b10, {0b10: 0, 0b11: 1}),
+            (Counts({0b00: 0, 0b01: 1}), 0b11, {0b10: 1, 0b11: 0}),
+            (
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
+                0b00,
+                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+            ),
+            (
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
+                0b01,
+                {0b00: 1, 0b01: 0, 0b10: 3, 0b11: 2},
+            ),
+            (
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
+                0b10,
+                {0b00: 2, 0b01: 3, 0b10: 0, 0b11: 1},
+            ),
+            (
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
+                0b11,
+                {0b00: 3, 0b01: 2, 0b10: 1, 0b11: 0},
+            ),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b00, {0b00: 0, 0b01: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b01, {0b01: 0, 0b00: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b10, {0b10: 0, 0b11: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b11, {0b11: 0, 0b10: 1}),
+            (
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
+                0b00,
+                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+            ),
+            (
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
+                0b01,
+                {0b01: 0, 0b00: 0.25, 0b11: 0.25, 0b10: 0.5},
+            ),
+            (
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
+                0b10,
+                {0b10: 0, 0b11: 0.25, 0b00: 0.25, 0b01: 0.5},
+            ),
+            (
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
+                0b11,
+                {0b11: 0, 0b10: 0.25, 0b01: 0.25, 0b00: 0.5},
+            ),
         ],
     )
-    def test_bitmask_counts(self, counts, mask, expected):
-        """Test mask counts base functionality."""
-        counts = Counts(counts)
-        assert bitmask_counts(counts, mask) == Counts(expected)
+    def test_bitflip_frequencies(self, frequencies, bitflips, expected):
+        """Test bitflip frequencies base functionality."""
+        assert bitflip_frequencies(frequencies, bitflips) == type(frequencies)(expected)
+
+
+class TestMaskFrequencies:
+    """Test mask frequencies."""
+
+    @mark.parametrize(
+        "frequency_type, frequencies, mask, expected",
+        [
+            (Counts, {0b00: 0, 0b01: 1}, 0b00, {0b00: 1}),
+            (Counts, {0b00: 0, 0b01: 1}, 0b01, {0b00: 0, 0b01: 1}),
+            (Counts, {0b00: 0, 0b01: 1}, 0b10, {0b00: 1}),
+            (Counts, {0b00: 0, 0b01: 1}, 0b11, {0b00: 0, 0b01: 1}),
+            (Counts, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b00, {0b00: 6}),
+            (Counts, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b01, {0b00: 2, 0b01: 4}),
+            (Counts, {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}, 0b10, {0b00: 1, 0b10: 5}),
+            (
+                Counts,
+                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+                0b11,
+                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+            ),
+            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b00, {0b00: 1}),
+            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b01, {0b00: 0, 0b01: 1}),
+            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b10, {0b00: 1}),
+            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b11, {0b00: 0, 0b01: 1}),
+            (QuasiDistribution, {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}, 0b00, {0b00: 1}),
+            (
+                QuasiDistribution,
+                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                0b01,
+                {0b00: 0.25, 0b01: 0.75},
+            ),
+            (
+                QuasiDistribution,
+                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                0b10,
+                {0b00: 0.25, 0b10: 0.75},
+            ),
+            (
+                QuasiDistribution,
+                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                0b11,
+                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+            ),
+        ],
+    )
+    def test_bitmask_frequencies(self, frequency_type, frequencies, mask, expected):
+        """Test mask frequencies base functionality."""
+        frequencies = frequency_type(frequencies)
+        assert bitmask_frequencies(frequencies, mask) == frequency_type(expected)
 
 
 class TestFrequencyConversion:
@@ -109,7 +207,7 @@ class TestFrequencyConversion:
             Counts({5: 6}),
         ],
     )
-    def test_counts_to_quasi_dists(self, counts):
+    def test_convert_counts_to_quasi_dists(self, counts):
         """Test convert counts functionality."""
         quasi_dists = counts_to_quasi_dists(counts)
         assert isinstance(quasi_dists, QuasiDistribution)
