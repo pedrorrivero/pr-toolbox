@@ -206,10 +206,9 @@ class ExpvalReckoner(ABC):
     @staticmethod
     def _validate_frequencies(frequencies: FrequenciesLike) -> QuasiDistribution:
         """Validate frequencies."""
-        if isinstance(frequencies, QuasiDistribution):
-            return frequencies
-        if isinstance(frequencies, (Counts, dict)):
+        if isinstance(frequencies, dict) and not isinstance(frequencies, QuasiDistribution):
             frequencies = Counts(frequencies)
+        if isinstance(frequencies, Counts):
             frequencies = counts_to_quasi_dists(frequencies)
         if not isinstance(frequencies, QuasiDistribution):
             raise TypeError("Expected QuasiDistribution object.")

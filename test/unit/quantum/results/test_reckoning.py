@@ -9,7 +9,6 @@
 # that they have been altered from the originals.
 
 """Tests for result reckoning tools."""
-
 from test import NO_ITERS
 
 from numpy import isclose, sqrt
@@ -18,6 +17,7 @@ from pytest import mark, raises
 from qiskit.quantum_info.operators import Pauli, SparsePauliOp
 from qiskit.result import Counts, QuasiDistribution
 
+from pr_toolbox.quantum.results.frequencies import counts_to_quasi_dists
 from pr_toolbox.quantum.results.reckoning import (
     CanonicalReckoner,
     ExpvalReckoner,
@@ -251,8 +251,9 @@ class TestCanonicalReckoner:
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, sqrt(var_coeff) * expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, operator, expected",
+        "frequencies, operator, expected",
         [
             ({}, SparsePauliOp("I"), ReckoningResult(0, 1)),
             ({}, SparsePauliOp(["I", "I"]), ReckoningResult(0, sqrt(2))),
@@ -290,11 +291,16 @@ class TestCanonicalReckoner:
         ],
     )
     @mark.parametrize("global_coeff", [1, 1j, 1 + 1j, 0.5 + 2j])
-    def test_reckon_operator(self, reckoner, counts, operator, expected, global_coeff):
+    def test_reckon_operator(
+        self, reckoner, frequency_type, frequencies, operator, expected, global_coeff
+    ):
         """Test reckon operator."""
-        counts = Counts(counts)
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dists(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
         operator = global_coeff * operator
-        result = reckoner.reckon_operator(counts, operator)
+        result = reckoner.reckon_operator(frequencies, operator)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, global_coeff * expected.expval)
@@ -302,8 +308,9 @@ class TestCanonicalReckoner:
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, sqrt(var_coeff) * expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, pauli, expected",
+        "frequencies, pauli, expected",
         [
             ({}, Pauli("I"), ReckoningResult(0, 1)),
             ({}, Pauli("Z"), ReckoningResult(0, 1)),
@@ -355,18 +362,22 @@ class TestCanonicalReckoner:
             ({1: 1}, Pauli("-iY"), ReckoningResult(1j, 0)),
         ],
     )
-    def test_reckon_pauli(self, reckoner, counts, pauli, expected):
+    def test_reckon_pauli(self, reckoner, frequency_type, frequencies, pauli, expected):
         """Test reckon Pauli."""
-        counts = Counts(counts)
-        result = reckoner.reckon_pauli(counts, pauli)
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dists(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
+        result = reckoner.reckon_pauli(frequencies, pauli)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, expected.expval)
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, expected",
+        "frequencies, expected",
         [
             ({}, ReckoningResult(0, 1)),
             ({0: 0}, ReckoningResult(0, 1)),
@@ -376,10 +387,13 @@ class TestCanonicalReckoner:
             ({0: 1, 1: 1}, ReckoningResult(0, 1 / sqrt(2))),
         ],
     )
-    def test_reckon_frequencies(self, reckoner, counts, expected):
+    def test_reckon_frequencies(self, reckoner, frequency_type, frequencies, expected):
         """Test reckon frequencies."""
-        counts = Counts(counts)
-        result = reckoner.reckon_frequencies(counts)
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dists(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
+        result = reckoner.reckon_frequencies(frequencies)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, expected.expval)
