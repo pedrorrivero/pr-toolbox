@@ -61,7 +61,6 @@ def map_dict(frequencies: dict, mapper) -> dict:
         raise TypeError(
             "Invalid value types for frequencies. Values must be of type `int' or `float'."
         )
-
     frequencies_dict: dict[int, int | float] = defaultdict(lambda: 0)
     for readout, freq in frequencies.items():
         readout = mapper(readout)
