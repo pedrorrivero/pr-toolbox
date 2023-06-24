@@ -110,15 +110,15 @@ def bitmask_frequencies(frequencies: FrequenciesLike, bitmask: int) -> Frequenci
     return map_frequencies(frequencies, lambda readout: readout & bitmask)
 
 
-def convert_counts_to_quasi_dists(counts: Counts) -> QuasiDistribution:
+def counts_to_quasi_dists(counts: Counts) -> QuasiDistribution:
     """Infers a :class:`~qiskit.result.QuasiDistribution` from :class:`~qiskit.result.Counts`.
-
     Args:
         counts: the counts to convert.
-
     Returns:
         New QuasiDistribution inferred from counts.
     """
+    if not isinstance(counts, Counts):
+        raise TypeError(f"Invalid counts type. Expected `Counts` but got {type(counts)} instead.")
     shots = counts.shots()
     std_dev = sqrt(1 / shots) if shots else None
     probabilities = {k: v / (shots or 1) for k, v in counts.int_outcomes().items()}
