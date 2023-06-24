@@ -18,7 +18,7 @@ from qiskit.result import Counts, QuasiDistribution
 from pr_toolbox.quantum.results.frequencies import (
     bitflip_frequencies,
     bitmask_frequencies,
-    convert_counts_to_quasi_dists,
+    counts_to_quasi_dists,
     map_frequencies,
 )
 
@@ -102,6 +102,12 @@ class TestMaskCounts:
 class TestFrequencyConversion:
     """Test conversion from counts to quasi-distributions."""
 
+    @mark.parametrize("counts", TYPES)
+    def test_wrong_counts_type(self, counts):
+        """Test wrong counts types upon conversion."""
+        with raises(TypeError):
+            counts_to_quasi_dists(counts)
+
     @mark.parametrize(
         "counts",
         [
@@ -113,9 +119,9 @@ class TestFrequencyConversion:
             Counts({5: 6}),
         ],
     )
-    def test_convert_counts_to_quasi_dists(self, counts):
+    def test_counts_to_quasi_dists(self, counts):
         """Test convert counts functionality."""
-        quasi_dists = convert_counts_to_quasi_dists(counts)
+        quasi_dists = counts_to_quasi_dists(counts)
         assert isinstance(quasi_dists, QuasiDistribution)
         assert quasi_dists.shots == counts.shots()
         if quasi_dists.shots:

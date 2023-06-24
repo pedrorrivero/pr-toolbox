@@ -27,11 +27,7 @@ from qiskit.result import Counts, QuasiDistribution
 from pr_toolbox.binary import parity_bit
 from pr_toolbox.quantum.operators import pauli_integer_mask
 
-from .frequencies import (
-    FrequenciesLike,
-    bitmask_frequencies,
-    convert_counts_to_quasi_dists,
-)
+from .frequencies import FrequenciesLike, bitmask_frequencies, counts_to_quasi_dists
 
 ReckoningResult = namedtuple("ReckoningResult", ("expval", "std_error"))
 OperatorType = Union[BaseOperator, PauliSumOp, str]  # TODO: to types
@@ -214,7 +210,7 @@ class ExpvalReckoner(ABC):
             return frequencies
         if isinstance(frequencies, (Counts, dict)):
             frequencies = Counts(frequencies)
-            frequencies = convert_counts_to_quasi_dists(frequencies)
+            frequencies = counts_to_quasi_dists(frequencies)
         if not isinstance(frequencies, QuasiDistribution):
             raise TypeError("Expected QuasiDistribution object.")
         return frequencies
