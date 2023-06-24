@@ -80,70 +80,61 @@ class TestBitflipFrequencies:
     """Test bitflip frequencies."""
 
     @mark.parametrize(
-        "frequency_type, frequencies, bitflips, expected",
+        "frequencies, bitflips, expected",
         [
-            (Counts, {0b00: 0, 0b01: 1}, 0b00, {0b00: 0, 0b01: 1}),
-            (Counts, {0b00: 0, 0b01: 1}, 0b01, {0b00: 1, 0b01: 0}),
-            (Counts, {0b00: 0, 0b01: 1}, 0b10, {0b10: 0, 0b11: 1}),
-            (Counts, {0b00: 0, 0b01: 1}, 0b11, {0b10: 1, 0b11: 0}),
+            (Counts({0b00: 0, 0b01: 1}), 0b00, {0b00: 0, 0b01: 1}),
+            (Counts({0b00: 0, 0b01: 1}), 0b01, {0b00: 1, 0b01: 0}),
+            (Counts({0b00: 0, 0b01: 1}), 0b10, {0b10: 0, 0b11: 1}),
+            (Counts({0b00: 0, 0b01: 1}), 0b11, {0b10: 1, 0b11: 0}),
             (
-                Counts,
-                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
                 0b00,
                 {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
             ),
             (
-                Counts,
-                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
                 0b01,
                 {0b00: 1, 0b01: 0, 0b10: 3, 0b11: 2},
             ),
             (
-                Counts,
-                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
                 0b10,
                 {0b00: 2, 0b01: 3, 0b10: 0, 0b11: 1},
             ),
             (
-                Counts,
-                {0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3},
+                Counts({0b00: 0, 0b01: 1, 0b10: 2, 0b11: 3}),
                 0b11,
                 {0b00: 3, 0b01: 2, 0b10: 1, 0b11: 0},
             ),
-            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b00, {0b00: 0, 0b01: 1}),
-            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b01, {0b01: 0, 0b00: 1}),
-            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b10, {0b10: 0, 0b11: 1}),
-            (QuasiDistribution, {0b00: 0, 0b01: 1}, 0b11, {0b11: 0, 0b10: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b00, {0b00: 0, 0b01: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b01, {0b01: 0, 0b00: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b10, {0b10: 0, 0b11: 1}),
+            (QuasiDistribution({0b00: 0, 0b01: 1}), 0b11, {0b11: 0, 0b10: 1}),
             (
-                QuasiDistribution,
-                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
                 0b00,
                 {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
             ),
             (
-                QuasiDistribution,
-                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
                 0b01,
                 {0b01: 0, 0b00: 0.25, 0b11: 0.25, 0b10: 0.5},
             ),
             (
-                QuasiDistribution,
-                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
                 0b10,
                 {0b10: 0, 0b11: 0.25, 0b00: 0.25, 0b01: 0.5},
             ),
             (
-                QuasiDistribution,
-                {0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5},
+                QuasiDistribution({0b00: 0, 0b01: 0.25, 0b10: 0.25, 0b11: 0.5}),
                 0b11,
                 {0b11: 0, 0b10: 0.25, 0b01: 0.25, 0b00: 0.5},
             ),
         ],
     )
-    def test_bitflip_frequencies(self, frequency_type, frequencies, bitflips, expected):
+    def test_bitflip_frequencies(self, frequencies, bitflips, expected):
         """Test bitflip frequencies base functionality."""
-        frequencies = frequency_type(frequencies)
-        assert bitflip_frequencies(frequencies, bitflips) == frequency_type(expected)
+        assert bitflip_frequencies(frequencies, bitflips) == type(frequencies)(expected)
 
 
 class TestMaskFrequencies:
