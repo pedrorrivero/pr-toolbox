@@ -17,7 +17,7 @@ from pytest import mark, raises
 from qiskit.quantum_info.operators import Pauli, SparsePauliOp
 from qiskit.result import Counts, QuasiDistribution
 
-from pr_toolbox.quantum.results.frequencies import counts_to_quasi_dists
+from pr_toolbox.quantum.results.frequencies import counts_to_quasi_dist
 from pr_toolbox.quantum.results.reckoning import (
     CanonicalReckoner,
     ExpvalReckoner,
@@ -299,7 +299,7 @@ class TestCanonicalReckoner:
     ):
         """Test reckon operator."""
         if frequency_type == QuasiDistribution:
-            frequencies = counts_to_quasi_dists(Counts(frequencies))
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
         else:
             frequencies = frequency_type(frequencies)
         operator = global_coeff * operator
@@ -368,7 +368,7 @@ class TestCanonicalReckoner:
     def test_reckon_pauli(self, reckoner, frequency_type, frequencies, pauli, expected):
         """Test reckon Pauli."""
         if frequency_type == QuasiDistribution:
-            frequencies = counts_to_quasi_dists(Counts(frequencies))
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
         else:
             frequencies = frequency_type(frequencies)
         result = reckoner.reckon_pauli(frequencies, pauli)
@@ -393,7 +393,7 @@ class TestCanonicalReckoner:
     def test_reckon_frequencies(self, reckoner, frequency_type, frequencies, expected):
         """Test reckon frequencies."""
         if frequency_type == QuasiDistribution:
-            frequencies = counts_to_quasi_dists(Counts(frequencies))
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
         else:
             frequencies = frequency_type(frequencies)
         result = reckoner.reckon_frequencies(frequencies)
