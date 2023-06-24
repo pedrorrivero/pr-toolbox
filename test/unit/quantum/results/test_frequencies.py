@@ -9,13 +9,16 @@
 # that they have been altered from the originals.
 
 """Tests for frequency results tools."""
+from test import TYPES
 
-from pytest import mark
-from qiskit.result import Counts
+from numpy import sqrt
+from pytest import mark, raises
+from qiskit.result import Counts, QuasiDistribution
 
 from pr_toolbox.quantum.results.frequencies import (
     bitflip_counts,
     bitmask_counts,
+    counts_to_quasi_dists,
     map_counts,
 )
 
@@ -84,3 +87,35 @@ class TestMaskCounts:
         """Test mask counts base functionality."""
         counts = Counts(counts)
         assert bitmask_counts(counts, mask) == Counts(expected)
+
+
+class TestFrequencyConversion:
+    """Test conversion from counts to quasi-distributions."""
+
+    @mark.parametrize("counts", TYPES)
+    def test_wrong_counts_type(self, counts):
+        """Test wrong counts types upon conversion."""
+        with raises(TypeError):
+            counts_to_quasi_dists(counts)
+
+    @mark.parametrize(
+        "counts",
+        [
+            Counts({}),
+            Counts({0b00: 0, 0b01: 1}),
+            Counts({0: 1, 1: 1}),
+            Counts({0: 0, 1: 5}),
+            Counts({12: 1, 13: 5, 14: 1}),
+            Counts({5: 6}),
+        ],
+    )
+    def test_counts_to_quasi_dists(self, counts):
+        """Test convert counts functionality."""
+        quasi_dists = counts_to_quasi_dists(counts)
+        assert isinstance(quasi_dists, QuasiDistribution)
+        assert quasi_dists.shots == counts.shots()
+        if quasi_dists.shots:
+            assert quasi_dists.stddev_upper_bound == sqrt(1 / quasi_dists.shots)
+        assert quasi_dists == {
+            k: v / (quasi_dists.shots or 1) for k, v in counts.int_outcomes().items()
+        }
