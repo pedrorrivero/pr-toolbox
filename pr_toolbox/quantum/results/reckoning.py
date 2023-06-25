@@ -59,10 +59,9 @@ class ExpvalReckoner(ABC):
         execution (i.e. resulting in the one-to-one associated input frequencies). Users must
         ensure that all frequencies entries come from the appropriate circuit execution.
 
-        args:
-            frequencies: a :class:`~qiskit.result.Counts` or `~qiskit.result.QuasiDistribution`
-             object from circuit execution.
-            operators: a list of operators associated one-to-one to the input frequencies.
+        Args:
+            frequencies_list: a sequence of `FrequenciesLike` objects from circuit execution.
+            operator_list: a list of operators associated one-to-one to the input frequencies.
 
         Returns:
             The expectation value and associated std-error for the sum of the input operators.
@@ -84,6 +83,10 @@ class ExpvalReckoner(ABC):
         within one circuit execution (i.e. resulting in the input frequencies), and that
         the appropriate changes of bases (i.e. rotations) were actively performed in
         the relevant qubits before readout; hence diagonalizing the input operators.
+
+        Args:
+            frequencies: a `FrequenciesLike` object from circuit execution.
+            operator: an operator associated to the input frequencies.
 
         Returns:
             A two-tuple containing the expectation value and associated std error
@@ -107,6 +110,10 @@ class ExpvalReckoner(ABC):
         the appropriate changes of bases (i.e. rotations) were actively performed
         in the relevant qubits before readout; hence diagonalizing the input Pauli.
 
+        Args:
+            frequencies: a `FrequenciesLike` object from circuit execution.
+            pauli: a Pauli operator associated to the input frequencies.
+
         Returns:
             A two-tuple containing the expectation value and associated std error
             for the input Pauli. Expectation values can be real or imaginary
@@ -123,6 +130,9 @@ class ExpvalReckoner(ABC):
 
     def reckon_frequencies(self, frequencies: FrequenciesLike) -> ReckoningResult:
         """Reckon expectation value and associated std error from frequencies.
+
+        Args:
+            frequencies: a `FrequenciesLike` object from circuit execution.
 
         Returns:
             A two-tuple containing the expectation value and associated std error
