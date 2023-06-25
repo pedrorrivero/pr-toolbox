@@ -9,15 +9,15 @@
 # that they have been altered from the originals.
 
 """Tests for result reckoning tools."""
-
 from test import NO_ITERS
 
 from numpy import isclose, sqrt
 from numpy.random import default_rng
 from pytest import mark, raises
 from qiskit.quantum_info.operators import Pauli, SparsePauliOp
-from qiskit.result import Counts
+from qiskit.result import Counts, QuasiDistribution
 
+from pr_toolbox.quantum.results.frequencies import counts_to_quasi_dist
 from pr_toolbox.quantum.results.reckoning import (
     CanonicalReckoner,
     ExpvalReckoner,
@@ -32,40 +32,78 @@ class TestExpvalReckoner:
     """Test ExpvalReckoner interface."""
 
     @mark.parametrize(
-        "counts, expected",
+        "frequencies, expected",
         [
-            ({}, (Counts({}),)),
-            (Counts({}), (Counts({}),)),
-            ({0: 1}, (Counts({0: 1}),)),
-            (Counts({0: 1}), (Counts({0: 1}),)),
-            ({0: 0, 1: 1}, (Counts({0: 0, 1: 1}),)),
-            (Counts({0: 0, 1: 1}), (Counts({0: 0, 1: 1}),)),
-            ([{}], (Counts({}),)),
-            ([Counts({})], (Counts({}),)),
-            ([{0: 1}], (Counts({0: 1}),)),
-            ([Counts({0: 1})], (Counts({0: 1}),)),
-            ([{0: 0, 1: 1}], (Counts({0: 0, 1: 1}),)),
-            ([Counts({0: 0, 1: 1})], (Counts({0: 0, 1: 1}),)),
-            ([{}, {0: 0, 1: 1}], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([Counts({}), {0: 0, 1: 1}], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([{}, Counts({0: 0, 1: 1})], (Counts({}), Counts({0: 0, 1: 1}))),
-            ([Counts({}), Counts({0: 0, 1: 1})], (Counts({}), Counts({0: 0, 1: 1}))),
+            ({}, QuasiDistribution({})),
+            ({0: 1}, QuasiDistribution({0: 1})),
+            ({0: 0, 1: 1}, QuasiDistribution({0: 0, 1: 1})),
         ],
     )
-    def test_validate_counts_list(self, counts, expected):
-        """Test validate counts."""
-        valid = ExpvalReckoner._validate_counts_list(counts)
+    def test_validate_frequencies(self, frequencies, expected):
+        """Test validate frequencies."""
+        for frequencies in (frequencies, Counts(frequencies), QuasiDistribution(frequencies)):
+            valid = ExpvalReckoner._validate_frequencies(frequencies)
+            assert isinstance(valid, QuasiDistribution)
+            assert valid == expected
+
+    @mark.parametrize(
+        "frequencies, expected",
+        [
+            ({}, (QuasiDistribution({}),)),
+            (Counts({}), (QuasiDistribution({}),)),
+            (QuasiDistribution({}), (QuasiDistribution({}),)),
+            ([{}], (QuasiDistribution({}),)),
+            ([Counts({})], (QuasiDistribution({}),)),
+            ([QuasiDistribution({})], (QuasiDistribution({}),)),
+            ([{0: 1}], (QuasiDistribution({0: 1}),)),
+            ([Counts({0: 1})], (QuasiDistribution({0: 1}),)),
+            ([QuasiDistribution({0: 1})], (QuasiDistribution({0: 1}),)),
+            ([{0: 0, 1: 1}], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([Counts({0: 0, 1: 1})], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([QuasiDistribution({0: 0, 1: 1})], (QuasiDistribution({0: 0, 1: 1}),)),
+            ([{}, {0: 0, 1: 1}], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            ([Counts({}), {0: 0, 1: 1}], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            (
+                [QuasiDistribution({}), {0: 0, 1: 1}],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+            ([{}, Counts({0: 0, 1: 1})], (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1}))),
+            (
+                [{}, QuasiDistribution({0: 0, 1: 1})],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+            (
+                [Counts({}), Counts({0: 0, 1: 1})],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+            (
+                [QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+            (
+                [Counts({}), QuasiDistribution({0: 0, 1: 1})],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+            (
+                [QuasiDistribution({}), Counts({0: 0, 1: 1})],
+                (QuasiDistribution({}), QuasiDistribution({0: 0, 1: 1})),
+            ),
+        ],
+    )
+    def test_validate_frequencies_list(self, frequencies, expected):
+        """Test validate frequency sequences."""
+        valid = ExpvalReckoner._validate_frequencies_list(frequencies)
         assert isinstance(valid, tuple)
-        assert all(isinstance(c, Counts) for c in valid)
+        assert all(isinstance(c, QuasiDistribution) for c in valid)
         assert valid == expected
 
     @mark.parametrize("counts", NO_ITERS)
-    def test_validate_counts_list_type_error(self, counts):
-        """Test validate counts raises errors."""
+    def test_validate_frequencies_list_type_error(self, counts):
+        """Test validate frequencies raises errors."""
         with raises(TypeError):
-            ExpvalReckoner._validate_counts_list(counts)
+            ExpvalReckoner._validate_frequencies_list(counts)
         with raises(TypeError):
-            ExpvalReckoner._validate_counts_list([counts])
+            ExpvalReckoner._validate_frequencies_list([counts])
 
     @mark.parametrize(
         "operators, expected",
@@ -131,46 +169,84 @@ class TestCanonicalReckoner:
     """Test CanonicalReckoner."""
 
     @mark.parametrize(
-        "counts, operators, expected",
+        "frequencies, operators, expected",
         [
             ([], [], ReckoningResult(0, 0)),
             ([Counts({})], ["Z"], ReckoningResult(0, 1)),
+            ([QuasiDistribution({})], ["Z"], ReckoningResult(0, 1)),
             ([Counts({0: 0})], ["I"], ReckoningResult(0, 1)),
+            ([QuasiDistribution({0: 0})], ["I"], ReckoningResult(0, 1)),
             ([Counts({0: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1}, shots=1)], ["I"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({1: 1})], ["I"], ReckoningResult(1, 0)),
             ([Counts({0: 1})], ["Z"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1}, shots=1)], ["Z"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Z"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["Z"], ReckoningResult(-1, 0)),
             ([Counts({0: 1})], ["X"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1}, shots=1)], ["X"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["X"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["X"], ReckoningResult(-1, 0)),
             ([Counts({0: 1})], ["Y"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 1}, shots=1)], ["Y"], ReckoningResult(1, 0)),
             ([Counts({1: 1})], ["Y"], ReckoningResult(-1, 0)),
+            ([QuasiDistribution({1: 1})], ["Y"], ReckoningResult(-1, 0)),
             ([Counts({0: 1, 1: 1})], ["I"], ReckoningResult(1, 0)),
+            ([QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)], ["I"], ReckoningResult(1, 0)),
             ([Counts({0: 1, 1: 1})], ["Z"], ReckoningResult(0, 1 / sqrt(2))),
+            (
+                [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["Z"],
+                ReckoningResult(0, 1 / sqrt(2)),
+            ),
             ([Counts({0: 1, 1: 1})], ["X"], ReckoningResult(0, 1 / sqrt(2))),
+            (
+                [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["X"],
+                ReckoningResult(0, 1 / sqrt(2)),
+            ),
             ([Counts({0: 1, 1: 1})], ["Y"], ReckoningResult(0, 1 / sqrt(2))),
+            (
+                [QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["Y"],
+                ReckoningResult(0, 1 / sqrt(2)),
+            ),
             (
                 [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
                 ["I", "Z"],
                 ReckoningResult(1, 1 / sqrt(2)),
             ),
             (
-                [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
+                [
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                ],
+                ["I", "Z"],
+                ReckoningResult(1, 1 / sqrt(2)),
+            ),
+            ([Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})], ["X", "Z"], ReckoningResult(0, 1)),
+            (
+                [
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                    QuasiDistribution({0: 0.5, 1: 0.5}, shots=2),
+                ],
                 ["X", "Z"],
                 ReckoningResult(0, 1),
             ),
             (
-                [Counts({0: 1, 1: 1}), Counts({0: 1, 1: 1})],
-                [SparsePauliOp(["X", "Z"], [1, 2]), SparsePauliOp(["I"])],
-                ReckoningResult(1, sqrt(5 / 2)),
+                [Counts({0: 1, 1: 1}), QuasiDistribution({0: 0.5, 1: 0.5}, shots=2)],
+                ["I", "Z"],
+                ReckoningResult(1, 1 / sqrt(2)),
             ),
         ],
     )
     @mark.parametrize("global_coeff", [1, 1j, 1 + 1j, 0.5 + 2j])
-    def test_reckon(self, reckoner, counts, operators, expected, global_coeff):
+    def test_reckon(self, reckoner, frequencies, operators, expected, global_coeff):
         """Test reckon."""
         operators = (SparsePauliOp(o) if not isinstance(o, SparsePauliOp) else o for o in operators)
         operators = [global_coeff * o for o in operators]
-        result = reckoner.reckon(counts, operators)
+        result = reckoner.reckon(frequencies, operators)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, global_coeff * expected.expval)
@@ -178,8 +254,9 @@ class TestCanonicalReckoner:
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, sqrt(var_coeff) * expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, operator, expected",
+        "frequencies, operator, expected",
         [
             ({}, SparsePauliOp("I"), ReckoningResult(0, 1)),
             ({}, SparsePauliOp(["I", "I"]), ReckoningResult(0, sqrt(2))),
@@ -217,11 +294,16 @@ class TestCanonicalReckoner:
         ],
     )
     @mark.parametrize("global_coeff", [1, 1j, 1 + 1j, 0.5 + 2j])
-    def test_reckon_operator(self, reckoner, counts, operator, expected, global_coeff):
+    def test_reckon_operator(
+        self, reckoner, frequency_type, frequencies, operator, expected, global_coeff
+    ):
         """Test reckon operator."""
-        counts = Counts(counts)
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
         operator = global_coeff * operator
-        result = reckoner.reckon_operator(counts, operator)
+        result = reckoner.reckon_operator(frequencies, operator)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, global_coeff * expected.expval)
@@ -229,8 +311,9 @@ class TestCanonicalReckoner:
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, sqrt(var_coeff) * expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, pauli, expected",
+        "frequencies, pauli, expected",
         [
             ({}, Pauli("I"), ReckoningResult(0, 1)),
             ({}, Pauli("Z"), ReckoningResult(0, 1)),
@@ -282,18 +365,22 @@ class TestCanonicalReckoner:
             ({1: 1}, Pauli("-iY"), ReckoningResult(1j, 0)),
         ],
     )
-    def test_reckon_pauli(self, reckoner, counts, pauli, expected):
+    def test_reckon_pauli(self, reckoner, frequency_type, frequencies, pauli, expected):
         """Test reckon Pauli."""
-        counts = Counts(counts)
-        result = reckoner.reckon_pauli(counts, pauli)
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
+        result = reckoner.reckon_pauli(frequencies, pauli)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, expected.expval)
         assert isinstance(result.std_error, (int, float))
         assert isclose(result.std_error, expected.std_error)
 
+    @mark.parametrize("frequency_type", (dict, Counts, QuasiDistribution))
     @mark.parametrize(
-        "counts, expected",
+        "frequencies, expected",
         [
             ({}, ReckoningResult(0, 1)),
             ({0: 0}, ReckoningResult(0, 1)),
@@ -303,10 +390,13 @@ class TestCanonicalReckoner:
             ({0: 1, 1: 1}, ReckoningResult(0, 1 / sqrt(2))),
         ],
     )
-    def test_reckon_counts(self, reckoner, counts, expected):
-        """Test reckon counts."""
-        counts = Counts(counts)
-        result = reckoner.reckon_counts(counts)
+    def test_reckon_frequencies(self, reckoner, frequency_type, frequencies, expected):
+        """Test reckon frequencies."""
+        if frequency_type == QuasiDistribution:
+            frequencies = counts_to_quasi_dist(Counts(frequencies))
+        else:
+            frequencies = frequency_type(frequencies)
+        result = reckoner.reckon_frequencies(frequencies)
         assert isinstance(result, ReckoningResult)
         assert isinstance(result.expval, (int, float, complex))
         assert isclose(result.expval, expected.expval)
